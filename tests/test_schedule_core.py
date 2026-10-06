@@ -1,13 +1,13 @@
 import sys
 import tempfile
 import unittest
-from unittest.mock import patch
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timedelta
+from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'package/contents/code'))
-from schedule_core import Store, events, validate_schedule, instant
+from schedule_core import Store, events, instant
 
 ZONE = ZoneInfo('Asia/Riyadh')
 

@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.ruff_cache/
+*.egg-info/
+tray/build/
+tray/dist/
+tray/packaging/build/
+tray/packaging/aurora.ico
+tray/packaging/aurora.icns

@@ -1,6 +1,6 @@
 # Aurora
 
-A sleep calculator for KDE Plasma 6 with configurable bedtime and wake-up reminders. The tray popup follows the active Plasma theme, fonts and accent color.
+A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a widget whose tray popup follows the active Plasma theme, fonts and accent color. On macOS and Windows it runs as a standalone tray application described in [tray/README.md](tray/README.md).
 
 ## Use
 
@@ -27,9 +27,13 @@ systemctl --user restart plasma-plasmashell.service
 
 The installer updates the widget and icon, installs the alarm activation files, enables and starts `aurora-alarms.service`, and enables Aurora in the tray. Restarting the panel loads the current QML; other applications stay open. The alarm service starts with future graphical login sessions and continues across panel restarts.
 
-The standalone `dist/aurora.plasmoid` archive installs the widget through Plasma's widget installer. Use the repository's `install.sh` to install and activate the alarm service as well.
+The standalone `dist/aurora.plasmoid` archive installs the widget through Plasma's widget installer. Rebuild it from the package directory with `python3 build-plasmoid.py` after changing the widget. Use the repository's `install.sh` to install and activate the alarm service as well.
 
 Alarms are stored separately from widget preferences in `${XDG_STATE_HOME:-~/.local/state}/aurora/alarms.json`. Updating the widget preserves saved schedules. Pause or remove schedules through **Alarms**. To stop all reminder delivery, run `systemctl --user disable --now aurora-alarms.service`.
+
+## macOS and Windows
+
+The port lives in `tray/` and keeps the whole app in the tray (menu bar on macOS). Builds install with a DMG on macOS (Apple Silicon) and an Inno Setup installer on Windows; the GitHub Actions workflow builds and attaches both, plus a fresh `aurora.plasmoid`, to a `v*` tag release. Builds are unsigned, so macOS requires right-click → Open and Windows shows a SmartScreen prompt. See [tray/README.md](tray/README.md) for running from source, packaging, storage locations, uninstall steps and tests. The Plasma widget and its D-Bus alarm service on Linux are unchanged.
 
 ## Validate
 
@@ -39,6 +43,7 @@ python -m unittest discover -s tests -p 'test_schedule_core.py'
 python -m unittest discover -s tests -p 'test_service_logic.py'
 QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software /usr/lib/qt6/bin/qmltestrunner -input tests -o -,txt
 ./tests/test-native-tray.sh
+cd tray && QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software python -m unittest discover -s tests -v
 ```
 
 The native tray test requires Qt 6 and Plasma development headers and an installed Aurora package. It builds an actual system tray and checks that its popup opens and closes, including Plasma 6.7's requirement to leave `preferredRepresentation` unset.
@@ -49,7 +54,7 @@ For a real D-Bus transport test without notifying your own desktop:
 dbus-run-session -- python tests/test_service_integration.py
 ```
 
-This uses the real request client and `notify-send` with a simulated notification server. It requires permission to create a private session bus. The scheduling and service logic tests run without a desktop bus and exercise repeat dates, midnight rollover, daylight saving, persistence, snooze, dismiss, failed storage, notification retries and sound state.
+This uses the real request client and `notify-send` with a simulated notification server (see `tests/requirements.txt`). It requires permission to create a private session bus. The scheduling and service logic tests run without a desktop bus and exercise repeat dates, midnight rollover, daylight saving, persistence, snooze, dismiss, failed storage, notification retries and sound state.
 
 Runtime service diagnostics:
 

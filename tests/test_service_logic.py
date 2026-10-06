@@ -6,7 +6,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
+
 from PySide6.QtCore import QCoreApplication, QObject, Signal
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'package/contents/code'))
 import aurora_service as service
 from schedule_core import Store
@@ -67,7 +69,8 @@ class ServiceLogic(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.clock = datetime(2026, 10, 5, 20, tzinfo=ZoneInfo('Asia/Riyadh'))
         self.patches = [patch.object(service, 'QProcess', Process), patch.object(service, 'QMediaPlayer', Player), patch.object(service, 'QAudioOutput', Audio)]
-        for p in self.patches: p.start()
+        for p in self.patches:
+            p.start()
         self.scheduler = service.Scheduler(Store(Path(self.temp.name) / 'alarms.json'), None)
         self.scheduler.timer.stop()
         self.scheduler.now = lambda: self.clock
@@ -79,10 +82,12 @@ class ServiceLogic(unittest.TestCase):
         self.assertEqual(saved['savedId'], saved['schedules'][0]['id'])
         Process.detached.clear()
     def tearDown(self):
-        for key in list(self.scheduler.active): self.scheduler.stop(key)
+        for key in list(self.scheduler.active):
+            self.scheduler.stop(key)
         self.scheduler.timer.stop()
         self.scheduler.deleteLater()
-        for p in reversed(self.patches): p.stop()
+        for p in reversed(self.patches):
+            p.stop()
         self.temp.cleanup()
     def request(self, action, **fields):
         return json.loads(self.scheduler.Request(json.dumps(dict(action=action, **fields))))

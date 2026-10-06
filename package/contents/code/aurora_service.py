@@ -4,15 +4,15 @@ import base64
 import html
 import json
 import os
-from pathlib import Path
 import shutil
 import sys
+from pathlib import Path
 from urllib.parse import unquote
 
-from PySide6.QtCore import ClassInfo, QObject, QCoreApplication, QProcess, QTimer, QUrl, Slot
+from PySide6.QtCore import ClassInfo, QCoreApplication, QObject, QProcess, QTimer, QUrl, Slot
 from PySide6.QtDBus import QDBusConnection, QDBusMessage
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
-from schedule_core import Store, local_zone, datetime
+from schedule_core import Store, datetime, local_zone
 
 SERVICE = 'org.dralk.Aurora'
 PATH = '/Scheduler'
@@ -212,8 +212,11 @@ class Scheduler(QObject):
         if record['timer']:
             record['timer'].stop()
             record['timer'].deleteLater()
-        record['process'].terminate()
-        record['process'].deleteLater()
+        try:
+            record['process'].terminate()
+            record['process'].deleteLater()
+        except RuntimeError:
+            pass
 
     def stop_schedule(self, schedule_id):
         for key, record in list(self.active.items()):
