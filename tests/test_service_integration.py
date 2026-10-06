@@ -120,10 +120,12 @@ def ensure_close_client():
     os.environ['PATH'] = directory + os.pathsep + os.environ.get('PATH', '')
 
 
-def wait_until(condition, description):
+def wait_until(condition, description, diagnostics=None):
     end = time.monotonic() + 8
     while not condition():
         if time.monotonic() > end:
+            if diagnostics is not None:
+                print(diagnostics(), file=sys.stderr, flush=True)
             raise AssertionError(description)
         QTest.qWait(20)
 
@@ -161,7 +163,9 @@ def main():
         assert not bad['ok'] and bad['available']
         clock = clock.replace(hour=21, minute=45)
         scheduler.tick()
-        wait_until(lambda: desktop.count == 1 and next(iter(scheduler.active.values()))['event'].get('notificationId'), 'Bedtime notification missing')
+        wait_until(lambda: desktop.count == 1 and next(iter(scheduler.active.values()))['event'].get('notificationId'),
+                   'Bedtime notification missing',
+                   lambda: f'count={desktop.count} active={list(scheduler.active)} pending={list(scheduler.store.data["pending"])} error={scheduler.last_error!r}')
         assert desktop.notices[1]['title'] == 'Bedtime reminder'
         assert desktop.notices[1]['expiry'] == 0
         assert desktop.notices[1]['actions'] == ['snooze', 'Snooze 10 min', 'dismiss', 'Dismiss']
