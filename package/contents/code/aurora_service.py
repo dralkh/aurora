@@ -153,8 +153,9 @@ class Scheduler(QObject):
         remaining = event['soundUntil'] - self.now().timestamp()
         if remaining <= 0:
             return
-        name = 'alarm-clock-elapsed.oga' if event['kind'] == 'wake' else 'bell-window-system.oga'
-        candidates = [Path('/usr/share/sounds') / theme / 'stereo' / name for theme in ('ocean', 'freedesktop')]
+        names = ['alarm-clock-elapsed.oga'] if event['kind'] == 'wake' else ['bell-window-system.oga', 'bell.oga']
+        candidates = [Path('/usr/share/sounds') / theme / 'stereo' / name
+                      for theme in ('ocean', 'freedesktop') for name in names]
         sound = next((p for p in candidates if p.exists()), None)
         if sound is None:
             self.last_error = 'The alarm sound is missing. Notifications still work.'
