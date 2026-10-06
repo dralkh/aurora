@@ -123,7 +123,11 @@ class Scheduler(QObject):
         args = ['--app-name=Aurora', '--urgency=critical', '--expire-time=0', '--print-id',
                 '--hint=boolean:suppress-sound:true', '--hint=string:desktop-entry:org.dralk.Aurora', '--icon=' + icon,
                 '--action=snooze=Snooze ' + str(event['snooze']) + ' min', '--action=dismiss=Dismiss', summary, body]
-        process.start('notify-send', args)
+        command = 'notify-send'
+        if shutil.which('stdbuf'):
+            # Older libnotify waits for actions before flushing the printed id.
+            command, args = 'stdbuf', ['-oL', 'notify-send'] + args
+        process.start(command, args)
 
     def output(self, key):
         record = self.active.get(key)
