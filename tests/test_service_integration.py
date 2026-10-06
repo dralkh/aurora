@@ -2,6 +2,8 @@
 import asyncio
 import base64
 import json
+import os
+import shutil
 import sys
 import tempfile
 import threading
@@ -106,6 +108,18 @@ class Desktop:
         self.loop.call_soon_threadsafe(self.interface.ActionInvoked, identifier, action)
 
 
+def ensure_close_client():
+    if shutil.which('qdbus6'):
+        return
+    directory = tempfile.mkdtemp(prefix='aurora-qdbus6-')
+    shim = Path(directory) / 'qdbus6'
+    shim.write_text('#!/bin/sh\n'
+                    'service="$1"; object_path="$2"; member="$3"; shift 3\n'
+                    'exec gdbus call --session --dest "$service" --object-path "$object_path" --method "$member" "$@"\n')
+    shim.chmod(0o755)
+    os.environ['PATH'] = directory + os.pathsep + os.environ.get('PATH', '')
+
+
 def wait_until(condition, description):
     end = time.monotonic() + 8
     while not condition():
@@ -119,6 +133,7 @@ def main():
     bus = QDBusConnection.sessionBus()
     assert bus.isConnected()
     desktop = Desktop()
+    ensure_close_client()
     with tempfile.TemporaryDirectory() as directory:
         path = Path(directory) / 'alarms.json'
         scheduler = Scheduler(Store(path), bus)
