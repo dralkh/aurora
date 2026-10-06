@@ -22,13 +22,37 @@ Item {
         name: "InlineAlarms"
         when: windowShown
         function init() {
-            findChild(view, "alarmSettings").close();
+            var settings = findChild(view, "alarmSettings");
+            settings.close();
+            tryCompare(settings, "visible", false);
             view.mode = 0; view.wakeMinutes = 360; view.cycles = 5; view.latency = 14;
             view.selectedId = ""; view.alarmName = "Sleep schedule";
             view.repeatDays = []; view.bedEnabled = true; view.wakeEnabled = true;
             view.bedLead = 15; view.bedSound = true; view.wakeSound = true;
             backend.available = true; backend.error = ""; backend.requests = []; backend.schedules = [];
             wait(20);
+        }
+        function test_choices_feed_saved_alarm() {
+            for (var mode = 0; mode < 3; mode++) {
+                view.mode = mode;
+                for (var count = 1; count <= 6; count++) {
+                    var tile = findChild(view, "cycleChoice" + count);
+                    mouseClick(tile, tile.width / 2, tile.height / 2);
+                    var bed = view.chosenBed, wake = view.chosenWake;
+                    view.setAlarm();
+                    var schedule = backend.requests[backend.requests.length - 1].schedule;
+                    compare(schedule.bedMinutes, bed);
+                    compare(schedule.wakeMinutes, wake);
+                    compare((wake - bed + 1440) % 1440, count * 90 + view.latency);
+                }
+            }
+        }
+        function test_new_alarm_resets_reminder_options() {
+            view.repeatDays = [0, 3]; view.bedEnabled = false; view.volume = 20;
+            view.chooseSaved(null);
+            compare(view.repeatDays.length, 0);
+            verify(view.bedEnabled && view.wakeEnabled);
+            compare(view.volume, 70);
         }
         function test_set_current_choices_without_navigation() {
             var button = findChild(view, "setAlarm");
@@ -45,13 +69,14 @@ Item {
             verify(findChild(view, "sleepDial").visible);
             verify(findChild(view, "alarmStatus").text.indexOf("Alarm set") >= 0);
         }
-        function test_configure_dropdown_keeps_clock_visible() {
+        function test_configure_panel_edits_reminders() {
             var button = findChild(view, "configureAlarms");
             mouseClick(button, button.width / 2, button.height / 2);
             var popup = findChild(view, "alarmSettings");
             tryCompare(popup, "opened", true);
             verify(findChild(view, "sleepDial").visible);
             var enabled = findChild(view, "bedAlarmEnabled");
+            wait(100);
             mouseClick(enabled, enabled.width / 2, enabled.height / 2);
             compare(view.bedEnabled, false);
             popup.close();

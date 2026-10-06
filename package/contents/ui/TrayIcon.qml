@@ -10,10 +10,11 @@ Item {
     signal expansionRequested(bool open)
 
     Kirigami.Icon {
+        objectName: "trayGlyph"
         anchors.fill: parent
         // The source viewBox removes the original padding.
         isMask: true
-        color: "#000000"
+        color: Kirigami.Theme.textColor
         source: icon.source
         active: false
     }

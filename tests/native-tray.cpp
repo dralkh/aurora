@@ -9,6 +9,13 @@
 #include <Plasma/PluginLoader>
 #include <PlasmaQuick/AppletQuickItem>
 #include <cstdio>
+QQuickItem *visualChild(QQuickItem *parent, const QString &name) {
+    if (parent->objectName() == name) return parent;
+    for (auto *child : parent->childItems()) {
+        if (auto *found = visualChild(child, name)) return found;
+    }
+    return nullptr;
+}
 class TestCorona : public Plasma::Corona { public: using Plasma::Corona::createContainmentDelayed; QRect screenGeometry(int) const override { return QRect(0,0,1000,1000); } };
 int main(int argc, char **argv) {
     QApplication app(argc, argv);
@@ -49,6 +56,21 @@ int main(int argc, char **argv) {
     QTest::qWait(200);
     fprintf(stdout,"After click: Aurora expanded %d, tray expanded %d, signal count %lld\n",item->isExpanded(),state ? state->property("expanded").toBool() : -1,(long long)spy.count());
     if (!item->isExpanded() || spy.count() != 1 || !item->fullRepresentationItem() || !state || !state->property("expanded").toBool()) return 5;
+    fprintf(stdout, "Actual full representation: %.1f x %.1f\n", item->fullRepresentationItem()->width(), item->fullRepresentationItem()->height());
+    auto *full = item->fullRepresentationItem();
+    QStringList controls{"sleepDial", "targetInput", "latencyInput", "setAlarm", "configureAlarms"};
+    for (int cycle = 1; cycle <= 6; ++cycle) controls << QString("cycleChoice%1").arg(cycle);
+    for (const auto &name : controls) {
+        auto *control = visualChild(full, name);
+        if (!control) { fprintf(stderr, "Missing control: %s\n", qPrintable(name)); return 11; }
+        const auto bounds = control->mapRectToItem(full, control->boundingRect());
+        if (bounds.left() < -1 || bounds.top() < -1 || bounds.right() > full->width() + 1 || bounds.bottom() > full->height() + 1) {
+            fprintf(stderr, "Clipped control: %s at %.1f,%.1f %.1fx%.1f\n", qPrintable(name), bounds.x(), bounds.y(), bounds.width(), bounds.height());
+            return 12;
+        }
+    }
+    if (visualChild(full, "calculatorScroll")) return 13;
+    fprintf(stdout, "All calculator controls fit the real tray popup without scrolling.\n");
     QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, item->mapToScene(QPointF(item->width()/2,item->height()/2)).toPoint());
     QTest::qWait(100);
     if (item->isExpanded() || spy.count() != 2 || state->property("expanded").toBool()) return 6;

@@ -4,7 +4,7 @@
     "Name": "Aurora",
     "Description": "Sleep cycle calculator with configurable bedtime and wake-up reminders",
     "Icon": "aurora",
-    "Version": "1.1.1",
+    "Version": "1.2.0",
     "License": "MIT",
     "Authors": [
       {

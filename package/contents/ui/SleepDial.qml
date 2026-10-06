@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import org.kde.kirigami 2.20 as Kirigami
+import QtQuick
+import org.kde.kirigami as Kirigami
 import "SleepMath.js" as MathUtil
 
 Item {
@@ -10,10 +10,12 @@ Item {
     property int selectedCycle: 5
     property int mode: 0
     property bool clock24: false
-    property real radius: Math.min(width, height) / 2 - 26
     property color accent: Kirigami.Theme.highlightColor
     property color foreground: Kirigami.Theme.textColor
     property color muted: Kirigami.Theme.disabledTextColor
+    property color backgroundColor: Kirigami.Theme.backgroundColor
+    property color highlightedTextColor: Kirigami.Theme.highlightedTextColor
+    property real radius: Math.min(width, height) / 2 - 26
     readonly property int result: MathUtil.result(anchor, selectedCycle, latency, mode)
     signal cyclePicked(int cycle)
     signal anchorDragged(int minutes)
@@ -35,6 +37,7 @@ Item {
     onAccentChanged: face.requestPaint()
     onForegroundChanged: face.requestPaint()
     onMutedChanged: face.requestPaint()
+
     Canvas {
         id: face
         anchors.fill: parent
@@ -64,9 +67,11 @@ Item {
         Text {
             required property int index
             property point pos: dial.point((index + 1) * 60, dial.radius - 20)
-            x: pos.x - width / 2; y: pos.y - height / 2
+            x: pos.x - width / 2
+            y: pos.y - height / 2
             text: index + 1
-            color: dial.muted; font.pixelSize: 11
+            color: dial.muted
+            font.pixelSize: 11
         }
     }
     Repeater {
@@ -76,14 +81,26 @@ Item {
             required property int index
             readonly property bool selected: index + 1 === dial.selectedCycle
             property point pos: dial.point(MathUtil.result(dial.anchor, index + 1, dial.latency, dial.mode), dial.radius)
-            x: pos.x - 15; y: pos.y - 15; width: 30; height: 30
+            x: pos.x - 15
+            y: pos.y - 15
+            width: 30
+            height: 30
             z: selected ? 3 : 1
             Rectangle {
                 anchors.centerIn: parent
-                width: marker.selected ? 22 : 8; height: width; radius: width / 2
-                color: marker.selected ? dial.accent : Kirigami.Theme.backgroundColor
-                border.color: dial.accent; border.width: marker.selected ? 0 : 1.5
-                Text { visible: marker.selected; anchors.centerIn: parent; text: marker.index + 1; font.pixelSize: 11; color: Kirigami.Theme.highlightedTextColor }
+                width: marker.selected ? 22 : 8
+                height: width
+                radius: width / 2
+                color: marker.selected ? dial.accent : dial.backgroundColor
+                border.color: dial.accent
+                border.width: marker.selected ? 0 : 1.5
+                Text {
+                    visible: marker.selected
+                    anchors.centerIn: parent
+                    text: marker.index + 1
+                    font.pixelSize: 11
+                    color: dial.highlightedTextColor
+                }
             }
             MouseArea {
                 id: markerMouse
@@ -111,11 +128,19 @@ Item {
     Item {
         id: anchorHandle
         property point pos: dial.point(dial.anchor, dial.radius)
-        x: pos.x - 16; y: pos.y - 16; width: 32; height: 32
+        x: pos.x - 16
+        y: pos.y - 16
+        width: 32
+        height: 32
         z: 4
         Rectangle {
-            anchors.centerIn: parent; width: 20; height: 20; radius: 10
-            color: Kirigami.Theme.backgroundColor; border.color: dial.foreground; border.width: 2
+            anchors.centerIn: parent
+            width: 20
+            height: 20
+            radius: 10
+            color: dial.backgroundColor
+            border.color: dial.foreground
+            border.width: 2
             Rectangle { anchors.centerIn: parent; width: 6; height: 6; radius: 3; color: dial.foreground }
         }
         MouseArea {

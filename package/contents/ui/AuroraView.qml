@@ -43,6 +43,7 @@ Item {
         if (!alarmName.trim() || (!bedEnabled && !wakeEnabled)) {
             status = !alarmName.trim() ? "Enter an alarm name in Configure." : "Enable a bedtime or wake-up alarm in Configure.";
             statusError = true;
+            settings.open();
             return;
         }
         var day = new Date();
@@ -57,7 +58,13 @@ Item {
         backend.request({action: "save", schedule: schedule});
     }
     function chooseSaved(schedule) {
-        if (!schedule) { selectedId = ""; alarmName = "Sleep schedule"; return; }
+        if (!schedule) {
+        selectedId = ""; alarmName = "Sleep schedule";
+        repeatDays = []; bedEnabled = true; wakeEnabled = true;
+        bedSound = true; wakeSound = true; bedLead = 15; snooze = 10; volume = 70;
+        status = ""; statusError = false;
+            return;
+        }
         selectedId = schedule.id; alarmName = schedule.name;
         repeatDays = schedule.days.slice(); bedEnabled = schedule.bedEnabled; wakeEnabled = schedule.wakeEnabled;
         bedSound = schedule.bedSound; wakeSound = schedule.wakeSound; bedLead = schedule.bedLead;
@@ -73,9 +80,8 @@ Item {
     }
     function configure(button) {
         if (settings.opened) { settings.close(); return; }
-        var point = button.mapToItem(view, 0, button.height);
-        settings.x = Math.max(8, Math.min(point.x + button.width - settings.width, view.width - settings.width - 8));
-        settings.y = point.y + 4;
+        settings.x = 8;
+        settings.y = 8;
         settings.open();
         if (backend) backend.refresh();
     }
@@ -109,7 +115,7 @@ Item {
         alarmBusy: view.backend && view.backend.busy
         alarmMessage: view.status || (view.backend && view.backend.error ? "Alarm service unavailable. Open Configure for details." : "")
         alarmError: view.statusError || (view.backend && view.backend.error !== "")
-        onPreferencesChanged: view.preferencesChanged()
+        onPreferencesChanged: { view.status = ""; view.statusError = false; view.preferencesChanged(); }
         onSetAlarmRequested: view.setAlarm()
         onConfigureRequested: function(button) { view.configure(button); }
     }
@@ -117,7 +123,7 @@ Item {
         id: settings
         objectName: "alarmSettings"
         owner: view
-        width: Math.min(380, view.width - 16)
-        height: Math.min(implicitHeight, view.height - y - 12)
+        width: view.width - 16
+        height: view.height - 16
     }
 }

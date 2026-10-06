@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtTest 1.3
+import org.kde.kirigami as Kirigami
 import "../package/contents/ui"
 
 Item {
@@ -12,7 +13,22 @@ Item {
     TestCase {
         name: "TrayPopupToggle"
         when: windowShown
-        function init() { icon.expanded = false; }
+        function init() {
+            icon.expanded = false;
+            icon.Kirigami.Theme.inherit = true;
+        }
+        function test_theme_color_changes_in_place() {
+            var glyph = findChild(icon, "trayGlyph");
+            verify(glyph.isMask);
+            icon.Kirigami.Theme.inherit = false;
+            // Simulate the foreground colors supplied by light and dark panels.
+            icon.Kirigami.Theme.textColor = "#232629";
+            tryCompare(glyph, "color", "#232629");
+            icon.Kirigami.Theme.textColor = "#eff0f1";
+            tryCompare(glyph, "color", "#eff0f1");
+            icon.Kirigami.Theme.textColor = "#232629";
+            tryCompare(glyph, "color", "#232629");
+        }
         function test_open_and_close() {
             mouseClick(icon, 24, 24);
             compare(icon.expanded, true);

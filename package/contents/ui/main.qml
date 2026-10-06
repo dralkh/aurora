@@ -23,8 +23,8 @@ PlasmoidItem {
         backend: alarms
         Layout.minimumWidth: 380
         Layout.preferredWidth: 420
-        Layout.minimumHeight: 650
-        Layout.preferredHeight: 690
+        Layout.minimumHeight: Math.max(360, Kirigami.Units.gridUnit * 21)
+        Layout.preferredHeight: Math.max(690, Kirigami.Units.gridUnit * 38)
         wakeMinutes: Plasmoid.configuration.wakeMinutes
         bedMinutes: Plasmoid.configuration.bedMinutes
         latency: Plasmoid.configuration.latency

@@ -1,8 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="232 244 802 790">
-  <style id="current-color-scheme" type="text/css">
-    .ColorScheme-Text { color: #232629; }
-  </style>
-  <g class="ColorScheme-Text" fill="currentColor">
+  <g fill="#f3f4fb">
     <path d="M716 257C480 212 251 370 244 625C234 809 367 956 549 1003L516 925L632 1026C824 1038 966 938 1020 813C847 955 630 900 542 735C467 594 518 385 716 257Z"/>
     <rect x="633" y="442" width="257" height="80" rx="40"/>
     <rect x="632" y="569" width="366" height="81" rx="40"/>

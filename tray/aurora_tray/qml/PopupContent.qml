@@ -1,10 +1,19 @@
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import "SleepMath.js" as MathUtil
 
-Item {
+Pane {
     id: view
+    padding: 0
+    palette.text: theme.text
+    palette.windowText: theme.text
+    palette.buttonText: theme.text
+    palette.base: theme.background
+    palette.button: theme.raised
+    palette.highlight: theme.accent
+    palette.highlightedText: theme.highlightText
+    background: Rectangle { radius: theme.radius; color: theme.background }
     objectName: "popupContent"
     signal closeRequested()
     property QtObject theme
@@ -46,6 +55,12 @@ Item {
         }
     }
 
+    function chooseCycle(count) {
+        if (count < 1 || count > 6) return;
+        backend.cycles = count;
+        view.status = "";
+        view.statusError = false;
+    }
     function setTarget(value) {
         if (backend.mode === 2) return;
         if (backend.mode === 0) backend.wakeMinutes = MathUtil.wrap(value);
@@ -60,14 +75,6 @@ Item {
     }
     function timeLabel(minutes) {
         return MathUtil.time(minutes, backend.clock24) + (backend.clock24 ? "" : " " + MathUtil.period(minutes));
-    }
-    function savedIndex() {
-        for (var i = 0; i < backend.schedules.length; i++)
-            if (backend.schedules[i].id === view.selectedId) return i + 1;
-        return 0;
-    }
-    function updateSelector() {
-        selector.currentIndex = savedIndex();
     }
     function setAlarm() {
         if (busy) return;
@@ -97,7 +104,6 @@ Item {
             status = "Alarm set · " + times.join(" · ");
             statusError = false;
             settingsOpen = false;
-            updateSelector();
         } else {
             status = response.error || "Could not set alarm.";
             statusError = true;
@@ -105,13 +111,14 @@ Item {
     }
     function chooseSaved(schedule) {
         if (!schedule) {
-            selectedId = "";
-            alarmName = "Sleep schedule";
+        selectedId = ""; alarmName = "Sleep schedule";
+        repeatDays = []; bedEnabled = true; wakeEnabled = true;
+        bedSound = true; wakeSound = true; bedLead = 15; snooze = 10; volume = 70;
+        status = ""; statusError = false;
             return;
         }
         selectedId = schedule.id;
         alarmName = schedule.name;
-        nameField.text = schedule.name;
         repeatDays = schedule.days.slice();
         bedEnabled = schedule.bedEnabled;
         wakeEnabled = schedule.wakeEnabled;
@@ -139,7 +146,6 @@ Item {
             repeatDays = [];
             status = "Alarm removed.";
             statusError = false;
-            updateSelector();
         } else {
             status = response.error || "Could not remove the alarm.";
             statusError = true;
@@ -157,33 +163,23 @@ Item {
     ColumnLayout {
         anchors.left: parent.left
         anchors.right: parent.right
+        anchors.bottom: parent.bottom
         anchors.top: parent.top
         anchors.margins: theme.largeSpacing
         spacing: theme.spacing
 
         RowLayout {
             Layout.fillWidth: true
+            Image { source: "../icons/aurora-mark.svg"; Layout.preferredWidth: 24; Layout.preferredHeight: 24 }
             Label {
-                text: "Aurora"
+                text: "Aurora Sleep"
                 font.pixelSize: 18
                 font.weight: Font.DemiBold
                 color: theme.text
                 Layout.fillWidth: true
             }
-            Button {
-                objectName: "setAlarm"
-                text: "Set alarm"
-                enabled: !view.busy
-                onClicked: view.setAlarm()
-                Accessible.name: "Set alarm"
-            }
-            Button {
-                objectName: "configureAlarms"
-                text: "Configure"
-                onClicked: { view.settingsOpen = true; view.updateSelector(); }
-                Accessible.name: "Configure alarms"
-            }
-            CheckBox {
+            AuroraSwitch {
+                font.pixelSize: 11
                 text: "24-hour"
                 checked: backend.clock24
                 onToggled: backend.clock24 = checked
@@ -191,14 +187,16 @@ Item {
             }
         }
         TabBar {
+            background: Rectangle { radius: 8; color: theme.surface }
+            spacing: 2
             Layout.fillWidth: true
             currentIndex: backend.mode
             onCurrentIndexChanged: {
                 if (backend.mode !== currentIndex) backend.mode = currentIndex;
             }
-            TabButton { text: "Wake at" }
-            TabButton { text: "Bed at" }
-            TabButton { text: "Sleep now" }
+            AuroraTabButton { text: "Wake at" }
+            AuroraTabButton { text: "Bed at" }
+            AuroraTabButton { text: "Sleep now" }
         }
         RowLayout {
             Layout.fillWidth: true
@@ -208,7 +206,7 @@ Item {
                 color: theme.text
                 Layout.fillWidth: true
             }
-            TextField {
+            AuroraTextField {
                 id: targetInput
                 objectName: "targetInput"
                 Layout.preferredWidth: 86
@@ -227,20 +225,15 @@ Item {
                 }
                 Accessible.name: "Time, hours colon minutes"
             }
-            ComboBox {
+            AuroraComboBox {
                 visible: !backend.clock24
                 enabled: backend.mode !== 2
                 Layout.preferredWidth: 82
                 Accessible.name: "AM or PM"
                 model: ["AM", "PM"]
-                Component.onCompleted: currentIndex = MathUtil.period(view.anchor) === "PM" ? 1 : 0
+                currentIndex: MathUtil.period(view.anchor) === "PM" ? 1 : 0
                 onActivated: function(index) { view.setTarget(view.anchor % 720 + index * 720); }
-                Connections {
-                    target: view
-                    function onAnchorChanged() {
-                        parent.currentIndex = MathUtil.period(view.anchor) === "PM" ? 1 : 0;
-                    }
-                }
+
             }
         }
         Item {
@@ -314,7 +307,7 @@ Item {
             Layout.fillWidth: true
             Layout.topMargin: theme.spacing
             Label { text: "Time to fall asleep:"; color: theme.text; Layout.fillWidth: true }
-            SpinBox {
+            AuroraSpinBox {
                 objectName: "latencyInput"
                 from: 0
                 to: 120
@@ -333,20 +326,40 @@ Item {
             rowSpacing: theme.spacing
             Repeater {
                 model: 6
-                Button {
+                AuroraButton {
                     id: tile
+                    objectName: "cycleChoice" + (index + 1)
                     required property int index
                     readonly property int minutes: MathUtil.result(view.anchor, index + 1, backend.latency, backend.mode)
                     Layout.fillWidth: true
                     Layout.preferredWidth: 110
-                    Layout.minimumHeight: 46
+                    Layout.minimumHeight: 48
                     font.pixelSize: theme.smallFontSize
-                    checkable: true
-                    checked: backend.cycles === index + 1
+                    selected: backend.cycles === index + 1
+                    Accessible.checkable: true
+                    Accessible.checked: selected
                     text: ((index + 1) * 1.5).toFixed(1) + "h · " + MathUtil.time(minutes, backend.clock24) + (backend.clock24 ? "" : " " + MathUtil.period(minutes))
-                    onClicked: backend.cycles = index + 1
+                    onClicked: view.chooseCycle(index + 1)
                     Accessible.name: (index + 1) + " cycles, " + ((index + 1) * 1.5) + " hours sleep, " + MathUtil.time(minutes, backend.clock24)
                 }
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            AuroraButton {
+                Layout.fillWidth: true
+                objectName: "setAlarm"
+                primary: true
+                text: "Set alarm"
+                enabled: !view.busy
+                onClicked: view.setAlarm()
+                Accessible.name: "Set alarm"
+            }
+            AuroraButton {
+                objectName: "configureAlarms"
+                text: "Configure"
+                onClicked: { view.settingsOpen = true; }
+                Accessible.name: "Configure alarms"
             }
         }
         Label {
@@ -369,272 +382,26 @@ Item {
         }
     }
 
-    Rectangle {
-        id: settings
+    AuroraScheduleForm {
         objectName: "alarmSettings"
         anchors.fill: parent
-        color: theme.background
         visible: view.settingsOpen
         z: 10
-
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: theme.largeSpacing
-            spacing: theme.spacing
-            RowLayout {
-                Layout.fillWidth: true
-                Label {
-                    text: "Alarms"
-                    font.pixelSize: 16
-                    font.weight: Font.DemiBold
-                    color: theme.text
-                    Layout.fillWidth: true
-                }
-                Button {
-                    text: "Close"
-                    onClicked: view.settingsOpen = false
-                    Accessible.name: "Close settings"
-                }
-            }
-            Label {
-                text: backend.error
-                visible: backend.error !== ""
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                color: theme.negative
-                font.pixelSize: theme.smallFontSize
-            }
-            Flickable {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                contentWidth: width
-                contentHeight: form.implicitHeight
-                clip: true
-                ScrollBar.vertical: ScrollBar { }
-
-                ColumnLayout {
-                    id: form
-                    width: parent.width
-                    spacing: theme.spacing
-                    RowLayout {
-                        Layout.fillWidth: true
-                        ComboBox {
-                            id: selector
-                            objectName: "savedAlarmSelector"
-                            Layout.fillWidth: true
-                            Accessible.name: "Saved alarms"
-                            model: ["New alarm"].concat(backend.schedules.map(function(s) { return s.name; }))
-                            onActivated: function(index) {
-                                view.chooseSaved(index === 0 ? null : backend.schedules[index - 1]);
-                            }
-                        }
-                        Button {
-                            text: "Delete"
-                            enabled: view.selectedId !== ""
-                            onClicked: view.deleteSelected()
-                            Accessible.name: "Delete this alarm"
-                        }
-                    }
-                    TextField {
-                        id: nameField
-                        objectName: "alarmName"
-                        Layout.fillWidth: true
-                        placeholderText: "Alarm name"
-                        maximumLength: 80
-                        text: view.alarmName
-                        onTextEdited: view.alarmName = text
-                        Accessible.name: "Alarm name"
-                    }
-                    Label {
-                        text: "Bed " + view.timeLabel(view.chosenBed) + " · Wake " + view.timeLabel(view.chosenWake)
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        color: theme.text
-                        font.pixelSize: theme.smallFontSize
-                    }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: theme.border }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        CheckBox {
-                            objectName: "bedAlarmEnabled"
-                            text: "Bedtime reminder"
-                            Layout.fillWidth: true
-                            checked: view.bedEnabled
-                            onToggled: view.bedEnabled = checked
-                            Accessible.name: "Bedtime reminder"
-                        }
-                        CheckBox {
-                            text: "Sound"
-                            checked: view.bedSound
-                            enabled: view.bedEnabled
-                            onToggled: view.bedSound = checked
-                            Accessible.name: "Bedtime sound"
-                        }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Label { text: "Before bedtime"; color: theme.text; Layout.fillWidth: true }
-                        SpinBox {
-                            objectName: "bedAlarmLead"
-                            from: 0
-                            to: 120
-                            editable: true
-                            Layout.preferredWidth: 110
-                            enabled: view.bedEnabled
-                            value: view.bedLead
-                            onValueModified: view.bedLead = value
-                            Accessible.name: "Minutes before bedtime"
-                        }
-                        Label { text: "min"; color: theme.text }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        CheckBox {
-                            objectName: "wakeAlarmEnabled"
-                            text: "Wake-up alarm"
-                            Layout.fillWidth: true
-                            checked: view.wakeEnabled
-                            onToggled: view.wakeEnabled = checked
-                            Accessible.name: "Wake-up alarm"
-                        }
-                        CheckBox {
-                            text: "Sound"
-                            checked: view.wakeSound
-                            enabled: view.wakeEnabled
-                            onToggled: view.wakeSound = checked
-                            Accessible.name: "Wake-up sound"
-                        }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Label { text: "Snooze"; color: theme.text; Layout.fillWidth: true }
-                        SpinBox {
-                            from: 1
-                            to: 60
-                            editable: true
-                            Layout.preferredWidth: 110
-                            value: view.snooze
-                            onValueModified: view.snooze = value
-                            Accessible.name: "Snooze minutes"
-                        }
-                        Label { text: "min"; color: theme.text }
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Label { text: "Volume"; color: theme.text }
-                        Slider {
-                            from: 0
-                            to: 100
-                            stepSize: 1
-                            Layout.fillWidth: true
-                            value: view.volume
-                            onMoved: view.volume = Math.round(value)
-                            Accessible.name: "Alarm volume"
-                        }
-                        Label { text: view.volume + "%"; color: theme.text; Layout.minimumWidth: 40 }
-                    }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: theme.border }
-                    Label {
-                        text: "Repeat on wake-up days"
-                        color: theme.text
-                        font.pixelSize: theme.smallFontSize
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-                        Repeater {
-                            model: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-                            Button {
-                                required property int index
-                                required property string modelData
-                                text: modelData
-                                font.pixelSize: theme.smallFontSize
-                                checkable: true
-                                Layout.fillWidth: true
-                                Layout.preferredWidth: 40
-                                checked: view.repeatDays.indexOf(index) >= 0
-                                onClicked: {
-                                    var days = view.repeatDays.slice(), at = days.indexOf(index);
-                                    if (at >= 0) days.splice(at, 1); else days.push(index);
-                                    view.repeatDays = days;
-                                }
-                                Accessible.name: "Repeat on " + modelData
-                            }
-                        }
-                    }
-                    Label {
-                        text: view.repeatDays.length ? "Bedtime reminders fall on the preceding evening when needed." : "One-time alarm for the next wake-up time."
-                        Layout.fillWidth: true
-                        wrapMode: Text.WordWrap
-                        color: theme.muted
-                        font.pixelSize: theme.smallFontSize
-                    }
-                    RowLayout {
-                        Layout.fillWidth: true
-                        CheckBox {
-                            visible: view.selectedId !== ""
-                            text: "Enabled"
-                            checked: {
-                                for (var i = 0; i < backend.schedules.length; i++)
-                                    if (backend.schedules[i].id === view.selectedId) return backend.schedules[i].enabled;
-                                return true;
-                            }
-                            onToggled: backend.toggleSchedule(view.selectedId, checked)
-                            Accessible.name: "Alarm enabled"
-                        }
-                        Item { Layout.fillWidth: true }
-                        Button {
-                            text: "Test"
-                            enabled: backend.available
-                            onClicked: backend.testReminder()
-                            Accessible.name: "Test reminder"
-                        }
-                        Button {
-                            text: "Set alarm"
-                            enabled: !view.busy
-                            onClicked: view.setAlarm()
-                            Accessible.name: "Set alarm"
-                        }
-                    }
-                    Repeater {
-                        model: backend.pending
-                        RowLayout {
-                            required property var modelData
-                            Layout.fillWidth: true
-                            Label {
-                                text: view.pendingLabel(modelData)
-                                color: theme.text
-                                Layout.fillWidth: true
-                                wrapMode: Text.WordWrap
-                                font.pixelSize: theme.smallFontSize
-                            }
-                            Button {
-                                text: "Dismiss"
-                                onClicked: backend.dismissReminder(modelData.key)
-                                Accessible.name: "Dismiss reminder"
-                            }
-                            Button {
-                                visible: !modelData.snoozed
-                                text: "Snooze"
-                                onClicked: backend.snoozeReminder(modelData.key)
-                                Accessible.name: "Snooze reminder"
-                            }
-                        }
-                    }
-                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 1; color: theme.border }
-                    CheckBox {
-                        text: "Start Aurora at login"
-                        checked: backend.startAtLogin
-                        onToggled: backend.startAtLogin = checked
-                        Accessible.name: "Start Aurora at login"
-                    }
-                    Button {
-                        text: "Quit Aurora"
-                        onClicked: backend.quit()
-                        Accessible.name: "Quit Aurora"
-                    }
-                }
-            }
-        }
+        owner: view
+        schedules: backend.schedules
+        pending: backend.pending
+        available: backend.available
+        busy: view.busy
+        message: view.status || backend.error
+        showLogin: true
+        startAtLogin: backend.startAtLogin
+        onCloseRequested: view.settingsOpen = false
+        onRemoveRequested: view.deleteSelected()
+        onToggleRequested: function(enabled) { backend.toggleSchedule(view.selectedId, enabled); }
+        onTestRequested: backend.testReminder()
+        onDismissRequested: function(key) { backend.dismissReminder(key); }
+        onSnoozeRequested: function(key) { backend.snoozeReminder(key); }
+        onLoginRequested: function(enabled) { backend.startAtLogin = enabled; }
+        onQuitRequested: backend.quit()
     }
 }

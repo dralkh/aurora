@@ -1,12 +1,18 @@
+![Aurora Sleep banner](assets/aurora-sleep-banner.png)
+
 # Aurora
 
-A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a widget whose tray popup follows the active Plasma theme, fonts and accent color. On macOS and Windows it runs as a standalone tray application described in [tray/README.md](tray/README.md).
+A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a tray widget using native Plasma controls, the active desktop theme, fonts, and accent color. The macOS/Windows tray app uses the Aurora midnight palette. Both versions provide the same sleep dial, cycle choices, and reminder settings. On macOS and Windows it runs as a standalone tray application described in [tray/README.md](tray/README.md).
+
+![Aurora Sleep product showcase](assets/aurora-sleep-showcase.png)
+
+The banner and showcase use actual Plasma screenshots with the desktop's light theme and accent color. Shorter tray popups use a compact side-by-side layout so the dial, six sleep choices, and alarm controls stay visible together without scrolling.
 
 ## Use
 
-Choose **Wake at**, **Bed at** or **Sleep now**, adjust the clock handles or time fields, and choose a cycle count. Press **Set alarm** to save bedtime and wake-up reminders using the current calculator choices, without leaving the calculator.
+Choose **Wake at**, **Bed at** or **Sleep now**, adjust the clock handles or time fields, and choose one of the six sleep-duration options below **Time to fall asleep**. Each option updates the dial and calculated bedtime or wake-up time; the selected option stays highlighted. Press **Set alarm** to save bedtime and wake-up reminders using the current calculator choices, without leaving the calculator.
 
-The small **Configure** button opens a dropdown containing the alarm name, separate bedtime and wake-up switches and sounds, advance bedtime notice, volume, snooze, and repeat days. Leave all days off for a one-time alarm at the next wake-up time. Choose **New alarm** or a saved alarm in the dropdown; saved alarms can be loaded, updated, enabled, paused or deleted there. Active reminders have **Snooze** and **Dismiss** controls in both their notification and the dropdown. **Test** checks desktop notification and sound delivery.
+The small **Configure** button opens a scrollable reminder panel containing the alarm name, separate bedtime and wake-up switches and sounds, advance bedtime notice, volume, snooze, and repeat days. Leave all days off for a one-time alarm at the next wake-up time. Choose **New alarm** or a saved alarm in the panel; saved alarms can be loaded, updated, enabled, paused or deleted there. Active reminders have **Snooze** and **Dismiss** controls in both their notification and the panel. **Test reminder** checks desktop notification and sound delivery.
 
 A repeating Monday wake-up alarm can have its bedtime reminder on Sunday evening. Bedtimes already passed are skipped. If you confirm during the advance-notice window before bedtime, the bedtime reminder fires immediately. The wake sound repeats for up to five minutes; the notification remains until acknowledged.
 
@@ -15,6 +21,8 @@ Reminders run in an independent user-session service with the popup closed. They
 Each calculated sleep cycle is estimated as 90 minutes. Sleep times are approximate. Local timezone rules are used for alarm dates; nonexistent daylight-saving wall times shift forward and repeated wall times fire once.
 
 ## Install or update
+
+Download the KDE widget, macOS disk image, or Windows installer from the [latest release](https://github.com/dralkh/aurora/releases/latest).
 
 Requires Plasma 6, Python 3 with PySide6 (QtCore, QtDBus and QtMultimedia), `notify-send` from libnotify, `qdbus6`, and systemd user services. Bedtime and wake sounds use the installed Ocean or Freedesktop sound theme.
 
@@ -29,7 +37,7 @@ The installer updates the widget and icon, installs the alarm activation files, 
 
 The standalone `dist/aurora.plasmoid` archive installs the widget through Plasma's widget installer. Rebuild it from the package directory with `python3 build-plasmoid.py` after changing the widget. Use the repository's `install.sh` to install and activate the alarm service as well.
 
-Alarms are stored separately from widget preferences in `${XDG_STATE_HOME:-~/.local/state}/aurora/alarms.json`. Updating the widget preserves saved schedules. Pause or remove schedules through **Alarms**. To stop all reminder delivery, run `systemctl --user disable --now aurora-alarms.service`.
+Alarms are stored separately from widget preferences in `${XDG_STATE_HOME:-~/.local/state}/aurora/alarms.json`. Updating the widget preserves saved schedules. Pause or remove schedules through **Configure**. To stop all reminder delivery, run `systemctl --user disable --now aurora-alarms.service`.
 
 ## macOS and Windows
 
