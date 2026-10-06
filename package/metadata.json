@@ -1,0 +1,20 @@
+{
+  "KPlugin": {
+    "Id": "org.dralk.aurorasleep",
+    "Name": "Aurora",
+    "Description": "Sleep cycle calculator with configurable bedtime and wake-up reminders",
+    "Icon": "aurora",
+    "Version": "1.1.1",
+    "License": "MIT",
+    "Authors": [
+      {
+        "Name": "Dralk"
+      }
+    ],
+    "Category": "Date and Time"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0",
+  "X-Plasma-NotificationArea": true,
+  "X-Plasma-NotificationAreaCategory": "ApplicationStatus",
+  "KPackageStructure": "Plasma/Applet"
+}
