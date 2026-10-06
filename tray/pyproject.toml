@@ -12,7 +12,7 @@ license = { text = "MIT" }
 dependencies = [
     "PySide6>=6.7",
     "tzlocal>=5.0",
-    "tzdata; platform_system == 'Windows'",
+    "tzdata>=2024.1",
 ]
 
 [project.optional-dependencies]

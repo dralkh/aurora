@@ -27,7 +27,7 @@ Source: "..\dist\Aurora\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdir
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
-Name: "{autostart}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: autostart
+Name: "{userstartup}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: autostart
 
 [Tasks]
 Name: "autostart"; Description: "Start Aurora when I sign in"; Flags: unchecked
