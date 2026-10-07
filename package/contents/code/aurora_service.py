@@ -9,11 +9,11 @@ import sys
 from pathlib import Path
 from urllib.parse import unquote
 
+from diary_core import DiaryStore
 from PySide6.QtCore import ClassInfo, QCoreApplication, QObject, QProcess, QTimer, QUrl, Slot
 from PySide6.QtDBus import QDBusConnection, QDBusMessage
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from schedule_core import Store, datetime, local_zone
-from diary_core import DiaryStore
 
 SERVICE = 'org.dralk.Aurora'
 PATH = '/Scheduler'

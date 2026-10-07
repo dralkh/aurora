@@ -13,9 +13,9 @@ application()
 from aurora_tray.backend import Backend
 from aurora_tray.engine import AlarmEngine
 from PySide6.QtCore import Q_ARG, QMetaObject, QObject, QPointF, QSettings, Qt, QUrl
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickItem, QQuickWindow
-from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
 
 
