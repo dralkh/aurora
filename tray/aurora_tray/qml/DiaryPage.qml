@@ -12,6 +12,8 @@ Item {
     property string kind: "dream"
     property var entries: ({dream: "", waking: "", bedtime: ""})
     property var days: []
+    property bool calendarExpanded: height >= 500
+    readonly property bool calendarOnly: calendarExpanded && height < 500
     property bool loaded: false
     property bool busy: false
     property bool dirty: false
@@ -53,7 +55,9 @@ Item {
         nextNavigation = null;
         if (!destination) return;
         if (destination.close) { closeRequested(); return; }
-        if (destination.kind) {
+        if (destination.calendar !== undefined) {
+            calendarExpanded = destination.calendar;
+        } else if (destination.kind) {
             kind = destination.kind;
             changingText = true;
             editor.text = entries[kind] || "";
@@ -61,6 +65,7 @@ Item {
         } else {
             selectedDate = destination.date || selectedDate;
             month = destination.month || selectedDate;
+            if (height < 500 && !destination.keepCalendar) calendarExpanded = false;
             loaded = false;
             load();
         }
@@ -90,7 +95,10 @@ Item {
         if (dirty) autosave.restart();
         else finishNavigation();
     }
-    onVisibleChanged: if (visible) refresh()
+    onVisibleChanged: {
+        if (visible) refresh();
+        else if (dirty && !busy) save();
+    }
     Timer { id: autosave; interval: 800; onTriggered: page.save() }
 
     ColumnLayout {
@@ -105,11 +113,25 @@ Item {
         }
         RowLayout {
             Layout.fillWidth: true
-            AuroraButton { objectName: "diaryPreviousMonth"; text: "‹"; Accessible.name: "Previous month"; enabled: !page.busy; onClicked: page.navigate({date: Diary.shiftMonth(page.month, -1)}) }
-            Label { text: Qt.formatDate(page.month, "MMMM yyyy"); color: theme.text; horizontalAlignment: Text.AlignHCenter; Layout.fillWidth: true; font.weight: Font.DemiBold }
-            AuroraButton { objectName: "diaryNextMonth"; text: "›"; Accessible.name: "Next month"; enabled: !page.busy; onClicked: page.navigate({date: Diary.shiftMonth(page.month, 1)}) }
+            AuroraButton { objectName: "diaryPreviousMonth"; text: "‹"; Accessible.name: "Previous month"; enabled: !page.busy; onClicked: page.navigate({date: Diary.shiftMonth(page.month, -1), keepCalendar: true}) }
+            AbstractButton {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 28
+                enabled: !page.busy
+                Accessible.name: "Show or hide calendar"
+                onClicked: page.navigate({calendar: !page.calendarExpanded})
+                contentItem: Label {
+                    text: Qt.formatDate(page.month, "MMMM yyyy") + (page.calendarExpanded ? " ▴" : " ▾")
+                    color: theme.text
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font.weight: Font.DemiBold
+                }
+            }
+            AuroraButton { objectName: "diaryNextMonth"; text: "›"; Accessible.name: "Next month"; enabled: !page.busy; onClicked: page.navigate({date: Diary.shiftMonth(page.month, 1), keepCalendar: true}) }
         }
         GridLayout {
+            visible: page.calendarExpanded
             Layout.fillWidth: true
             columns: 7
             columnSpacing: 2
@@ -163,7 +185,9 @@ Item {
             }
         }
         Label { text: Qt.formatDate(page.selectedDate, "dddd, d MMMM"); color: theme.text; font.pixelSize: theme.smallFontSize; Layout.fillWidth: true }
+        Item { visible: page.calendarOnly; Layout.fillHeight: true }
         RowLayout {
+            visible: !page.calendarOnly
             Layout.fillWidth: true
             Repeater {
                 model: [{key: "dream", label: "Dream"}, {key: "waking", label: "Waking"}, {key: "bedtime", label: "Bedtime"}]
@@ -180,6 +204,7 @@ Item {
             }
         }
         ScrollView {
+            visible: !page.calendarOnly
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
@@ -202,6 +227,7 @@ Item {
             }
         }
         RowLayout {
+            visible: !page.calendarOnly
             Layout.fillWidth: true
             Label { text: page.message; color: page.failed ? theme.negative : theme.muted; wrapMode: Text.WordWrap; font.pixelSize: theme.smallFontSize; Layout.fillWidth: true }
             AuroraButton { objectName: "diarySave"; text: page.failed && !page.loaded ? "Retry" : "Save"; primary: true; enabled: !page.busy && (page.dirty || !page.loaded); onClicked: page.loaded ? page.save() : page.load() }
