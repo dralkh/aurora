@@ -2,31 +2,31 @@
 
 # Aurora
 
-A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a tray widget using native Plasma controls, the active desktop theme, fonts, and accent color. The macOS menu bar app follows the system appearance and accent color, with native controls and an AppKit material background. The Windows tray app uses the Aurora midnight palette. Both versions provide the same sleep dial, cycle choices, and reminder settings. On macOS and Windows it runs as a standalone tray application described in [tray/README.md](tray/README.md).
+A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a tray widget using native Plasma controls, so it follows your desktop theme, fonts and accent color. On macOS and Windows it's a standalone tray app; see [tray/README.md](tray/README.md). All versions share the same sleep dial, cycle choices and reminder settings.
 
 ![Aurora Sleep product showcase](assets/aurora-sleep-showcase.png)
 
-The banner and showcase use actual Plasma screenshots with the desktop's light theme and accent color. Shorter tray popups use a compact side-by-side layout so the dial, six sleep choices, and alarm controls stay visible together without scrolling.
+These are real Plasma screenshots on the light theme with the system accent. The tray popup uses a compact side-by-side layout so the dial, six cycle choices and alarm controls stay visible without scrolling.
 
 ## Use
 
-Choose **Wake at**, **Bed at** or **Sleep now**, adjust the clock handles or time fields, and choose one of the six sleep-duration options below **Time to fall asleep**. Each option updates the dial and calculated bedtime or wake-up time; the selected option stays highlighted. Press **Set alarm** to save bedtime and wake-up reminders using the current calculator choices, without leaving the calculator.
+Choose **Wake at**, **Bed at** or **Sleep now**, then drag the clock handles or edit the time fields and pick one of the six durations under *Time to fall asleep*. The dial and the calculated bed or wake time update as you go. **Set alarm** saves bedtime and wake-up reminders from the current choices without leaving the calculator.
 
-The small **Configure** button opens a scrollable reminder page with a **Back** button containing the alarm name, separate bedtime and wake-up switches and sounds, advance bedtime notice, volume, snooze, and repeat days. Leave all days off for a one-time alarm at the next wake-up time. Choose **New alarm** or a saved alarm on the page; saved alarms can be loaded, updated, enabled, paused or deleted there. Active reminders have **Snooze** and **Dismiss** controls in both their notification and the page. **Test reminder** checks desktop notification and sound delivery.
+**Configure** opens a scrollable reminder page: alarm name, separate bedtime and wake-up switches and sounds, advance notice, volume, snooze and repeat days. Leave every day off for a one-time alarm at the next wake time. Saved alarms can be loaded, updated, enabled, paused or deleted here, and active reminders get **Snooze** and **Dismiss** in both the notification and the page. **Test reminder** checks that notifications and sound actually reach you.
 
-Open **Diary** for a compact calendar history. Choose a day and write in **Dream**, **Waking**, or **Bedtime**. Entries save automatically after a short pause; **Save** writes immediately. Switching dates, sections, or using **Back** saves first. A dot marks days with entries. Clearing a section and saving removes only that section. Notes stay on this device in `diary.sqlite3`, beside the alarm file; updates preserve them. Each section supports up to 20,000 characters.
+**Diary** is a calendar of your notes. Pick a day and write in the **Dream**, **Waking** or **Bedtime** section. Entries autosave shortly after you stop typing, and **Save** writes immediately; switching date or section saves first. A dot marks days that have entries, and clearing a section removes only that section. Notes stay on this device in `diary.sqlite3` beside the alarm file and survive widget updates. Each section holds up to 20,000 characters.
 
-The calculator math, alarm-form model, diary calendar and diary storage are shared across platforms. KDE uses Plasma controls and a D-Bus adapter; macOS and Windows use the standalone app and their desktop integrations. The package build rejects differing copies of shared files.
+The calculator math, alarm form model, diary calendar and diary storage are shared across platforms. KDE uses Plasma controls with a D-Bus adapter; macOS and Windows use the standalone app. The package build fails if copies of those shared files differ.
 
-A repeating Monday wake-up alarm can have its bedtime reminder on Sunday evening. Bedtimes already passed are skipped. If you confirm during the advance-notice window before bedtime, the bedtime reminder fires immediately. The wake sound repeats for up to five minutes; the notification remains until acknowledged.
+A repeating Monday wake-up can have its bedtime reminder on Sunday evening. Bedtimes that have already passed are skipped, and if you confirm during the advance-notice window the reminder fires right away. The wake sound repeats for up to five minutes and the notification stays until you acknowledge it.
 
-Reminders run in an independent user-session service with the popup closed. They require a logged-in session and an awake computer. Aurora does not power on or resume the computer. On resume, overdue alarms up to one hour old are delivered; older occurrences are skipped. Persisted ringing and snoozed reminders recover after service restarts. Old unacknowledged reminders expire from recovery after 24 hours.
+Reminders run in a user-session service even when the popup is closed. They need a logged-in session and an awake machine; Aurora won't resume your computer. Overdue alarms up to an hour old are delivered after resume, anything older is skipped. Ringing and snoozed reminders survive service restarts, and unacknowledged ones drop out of recovery after 24 hours.
 
-Each calculated sleep cycle is estimated as 90 minutes. Sleep times are approximate. Local timezone rules are used for alarm dates; nonexistent daylight-saving wall times shift forward and repeated wall times fire once.
+Each sleep cycle counts as 90 minutes, so the times are approximations. Alarm dates use local timezone rules: nonexistent daylight-saving times shift forward, and repeated ones fire once.
 
 ## Install or update
 
-Download the KDE widget, macOS disk image, or Windows installer from the [latest release](https://github.com/dralkh/aurora/releases/latest).
+Grab the KDE widget, macOS disk image or Windows installer from the [latest release](https://github.com/dralkh/aurora/releases/latest).
 
 Requires Plasma 6, Python 3 with PySide6 (QtCore, QtDBus and QtMultimedia), `notify-send` from libnotify, `qdbus6`, and systemd user services. Bedtime and wake sounds use the installed Ocean or Freedesktop sound theme.
 
@@ -37,15 +37,15 @@ Run in a terminal inside your Plasma desktop:
 systemctl --user restart plasma-plasmashell.service
 ```
 
-The installer updates the widget and icon, installs the alarm activation files, enables and starts `aurora-alarms.service`, and enables Aurora in the tray. Restarting the panel loads the current QML; other applications stay open. The alarm service starts with future graphical login sessions and continues across panel restarts.
+The installer updates the widget and icon, adds the alarm activation files, enables and starts `aurora-alarms.service`, and turns Aurora on in the tray. Restarting the panel reloads the current QML; your other applications stay open. The alarm service starts with future graphical logins and keeps running across panel restarts.
 
-The standalone `dist/aurora.plasmoid` archive installs the widget through Plasma's widget installer. Rebuild it from the package directory with `python3 build-plasmoid.py` after changing the widget. Use the repository's `install.sh` to install and activate the alarm service as well.
+`dist/aurora.plasmoid` installs the widget through Plasma's widget installer. Rebuild it from the package directory with `python3 build-plasmoid.py` after changing the widget, and use `install.sh` when you also want the alarm service set up.
 
-Alarms are stored separately from widget preferences in `${XDG_STATE_HOME:-~/.local/state}/aurora/alarms.json`. Updating the widget preserves saved schedules. Pause or remove schedules through **Configure**. To stop all reminder delivery, run `systemctl --user disable --now aurora-alarms.service`.
+Alarms are stored apart from widget preferences in `${XDG_STATE_HOME:-~/.local/state}/aurora/alarms.json`, so updating the widget keeps your schedules. Manage them through **Configure**, or stop delivery entirely with `systemctl --user disable --now aurora-alarms.service`.
 
 ## macOS and Windows
 
-The port lives in `tray/` and keeps the whole app in the tray (menu bar on macOS). Builds install with a DMG on macOS (Apple Silicon) and an Inno Setup installer on Windows; the GitHub Actions workflow builds and attaches both, plus a fresh `aurora.plasmoid`, to a `v*` tag release. Builds are unsigned, so macOS requires right-click → Open and Windows shows a SmartScreen prompt. See [tray/README.md](tray/README.md) for running from source, packaging, storage locations, uninstall steps and tests. The Plasma widget uses the same alarm form model and diary, with its D-Bus service providing Linux storage and notifications.
+The port lives in `tray/` and keeps the whole app in the tray (the menu bar on macOS). Tagged releases ship a DMG for Apple Silicon and an Inno Setup installer for Windows, plus a fresh `aurora.plasmoid`. Both builds are unsigned, so macOS needs right-click → Open and Windows shows a SmartScreen prompt. [tray/README.md](tray/README.md) covers running from source, packaging, storage locations, uninstalling and tests.
 
 ## Validate
 
@@ -58,7 +58,7 @@ QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software /usr/lib/qt6/bin/qmltestrunn
 cd tray && QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software python -m unittest discover -s tests -v
 ```
 
-The native tray test requires Qt 6 and Plasma development headers and an installed Aurora package. It builds an actual system tray and checks that its popup opens and closes, including Plasma 6.7's requirement to leave `preferredRepresentation` unset.
+The native tray test needs Qt 6, the Plasma development headers and an installed Aurora package. It builds a real system tray and checks that its popup opens and closes, including Plasma 6.7's requirement to leave `preferredRepresentation` unset.
 
 For a real D-Bus transport test without notifying your own desktop:
 
@@ -66,7 +66,7 @@ For a real D-Bus transport test without notifying your own desktop:
 dbus-run-session -- python tests/test_service_integration.py
 ```
 
-This uses the real request client and `notify-send` with a simulated notification server (see `tests/requirements.txt`). It requires permission to create a private session bus. The scheduling and service logic tests run without a desktop bus and exercise repeat dates, midnight rollover, daylight saving, persistence, snooze, dismiss, failed storage, notification retries and sound state.
+This drives the real request client and `notify-send` against a simulated notification server (see `tests/requirements.txt`) and needs permission to create a private session bus. The scheduling and service logic tests run without a desktop bus and cover repeat dates, midnight rollover, daylight saving, persistence, snooze, dismiss, failed storage, notification retries and sound state.
 
 Runtime service diagnostics:
 
