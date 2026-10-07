@@ -6,13 +6,13 @@ on:
     tags: ['v*']
     paths:
       - 'tray/**'
-      - 'package/contents/code/schedule_core.py'
+      - 'package/**'
       - 'build-plasmoid.py'
       - '.github/workflows/tray.yml'
   pull_request:
     paths:
       - 'tray/**'
-      - 'package/contents/code/schedule_core.py'
+      - 'package/**'
       - 'build-plasmoid.py'
       - '.github/workflows/tray.yml'
   workflow_dispatch:

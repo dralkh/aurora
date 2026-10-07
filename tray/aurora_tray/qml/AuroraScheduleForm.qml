@@ -23,26 +23,31 @@ Pane {
     padding: 16
     implicitWidth: 400
     implicitHeight: 640
-    AuroraTheme { id: theme }
+    property QtObject theme: owner ? owner.theme : fallbackTheme
+    AuroraTheme { id: fallbackTheme }
     palette.window: theme.background
-    palette.base: theme.background
+    palette.base: theme.nativeMac ? theme.systemColors.base : theme.background
     palette.button: theme.raised
     palette.text: theme.text
     palette.windowText: theme.text
     palette.buttonText: theme.text
     palette.highlight: theme.accent
     palette.highlightedText: theme.highlightText
+    palette.disabled.text: theme.nativeMac ? theme.disabledColors.text : theme.muted
+    palette.disabled.windowText: theme.nativeMac ? theme.disabledColors.windowText : theme.muted
+    palette.disabled.buttonText: theme.nativeMac ? theme.disabledColors.buttonText : theme.muted
     palette.light: theme.border
     palette.mid: theme.border
     palette.dark: theme.background
     background: Rectangle {
         radius: theme.radius
-        color: theme.background
-        border.color: theme.border
+        color: theme.nativeMaterial ? "transparent" : theme.background
+        border.color: theme.nativeMaterial ? "transparent" : theme.border
         Rectangle {
             anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right
             anchors.margins: 1
             height: 92; radius: theme.radius
+            visible: !theme.nativeMac
             gradient: Gradient {
                 GradientStop { position: 0; color: "#29243f" }
                 GradientStop { position: 1; color: "#101622" }
@@ -54,13 +59,13 @@ Pane {
         spacing: 12
         RowLayout {
             Layout.fillWidth: true
-            Image { source: "../icons/aurora-mark.svg"; Layout.preferredWidth: 26; Layout.preferredHeight: 26 }
+            Image { visible: !theme.nativeMac; source: "../icons/aurora-mark.svg"; Layout.preferredWidth: 26; Layout.preferredHeight: 26 }
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 2
                 Label { Layout.fillWidth: true; text: "Sleep schedule"; font.pixelSize: 19; font.weight: Font.DemiBold; color: theme.text }
-                Label { Layout.fillWidth: true; text: "Make room for rest."; font.pixelSize: 11; color: theme.muted }
+                Label { Layout.fillWidth: true; text: theme.nativeMac ? "Alarms and reminders" : "Make room for rest."; font.pixelSize: 11; color: theme.muted }
             }
-            AuroraButton { text: "Back"; onClicked: form.closeRequested(); Accessible.name: "Back to calculator" }
+            AuroraButton { objectName: "settingsBack"; text: "Back"; onClicked: form.closeRequested(); Accessible.name: "Back to calculator" }
         }
         Label {
             objectName: "scheduleStatus"

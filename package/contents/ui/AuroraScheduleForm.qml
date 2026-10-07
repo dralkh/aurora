@@ -36,7 +36,7 @@ Pane {
                 Label { Layout.fillWidth: true; text: "Sleep schedule"; font.weight: Font.DemiBold; color: theme.text }
                 Label { Layout.fillWidth: true; text: "Make room for rest."; font: Kirigami.Theme.smallFont; color: theme.muted }
             }
-            AuroraButton { text: "Back"; onClicked: form.closeRequested(); Accessible.name: "Back to calculator" }
+            AuroraButton { objectName: "settingsBack"; text: "Back"; onClicked: form.closeRequested(); Accessible.name: "Back to calculator" }
         }
         Label {
             objectName: "scheduleStatus"

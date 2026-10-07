@@ -13,6 +13,7 @@ from PySide6.QtCore import ClassInfo, QCoreApplication, QObject, QProcess, QTime
 from PySide6.QtDBus import QDBusConnection, QDBusMessage
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer
 from schedule_core import Store, datetime, local_zone
+from diary_core import DiaryStore
 
 SERVICE = 'org.dralk.Aurora'
 PATH = '/Scheduler'
@@ -24,6 +25,7 @@ class Scheduler(QObject):
     def __init__(self, store, bus):
         super().__init__()
         self.store, self.bus = store, bus
+        self.diary = DiaryStore(store.path.with_name('diary.sqlite3'))
         self.zone = local_zone()
         self.active = {}
         self.last_error = ''
@@ -58,6 +60,8 @@ class Scheduler(QObject):
             if not isinstance(request, dict):
                 raise ValueError('Invalid request.')
             action = request.get('action')
+            if action in ('diary_load', 'diary_save'):
+                return json.dumps(self.diary.request(request), ensure_ascii=False)
             saved_id = None
             if action == 'save':
                 schedule = request['schedule']

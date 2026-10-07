@@ -15,6 +15,7 @@ from aurora_tray.engine import AlarmEngine
 from PySide6.QtCore import Q_ARG, QMetaObject, QObject, QPointF, QSettings, Qt, QUrl
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuick import QQuickItem, QQuickWindow
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
 
 
@@ -59,6 +60,57 @@ class QmlSmoke(unittest.TestCase):
     def test_windows_resolve(self):
         self.assertIsNotNone(self.root_object.property('popup'))
         self.assertIsNotNone(self.root_object.property('reminder'))
+
+    def test_settings_page_hides_calculator_and_back_returns(self):
+        popup = self.root_object.property('popup')
+        content = popup.findChild(QObject, 'popupContent')
+        calculator = popup.findChild(QObject, 'calculatorPage')
+        settings = popup.findChild(QObject, 'alarmSettings')
+        content.setProperty('settingsOpen', False)
+        popup.setProperty('visible', True)
+        QTest.qWait(30)
+
+        def click(name):
+            button = popup.findChild(QObject, name)
+            point = button.mapToScene(QPointF(button.width() / 2, button.height() / 2)).toPoint()
+            QTest.mouseClick(popup, Qt.LeftButton, Qt.NoModifier, point)
+            QTest.qWait(20)
+
+        self.assertTrue(calculator.property('visible'))
+        self.assertFalse(settings.property('visible'))
+        click('configureAlarms')
+        self.assertTrue(content.property('settingsOpen'))
+        self.assertFalse(calculator.property('visible'))
+        self.assertTrue(settings.property('visible'))
+        click('settingsBack')
+        self.assertFalse(content.property('settingsOpen'))
+        self.assertTrue(calculator.property('visible'))
+        self.assertFalse(settings.property('visible'))
+        self.assertTrue(popup.property('visible'))
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'macOS uses the system appearance')
+    def test_system_palette_updates_theme_without_reopening(self):
+        app = application()
+        original = QPalette(app.palette())
+        theme = self.root_object.property('theme')
+        try:
+            for background, foreground, accent in (
+                ('#f5f5f5', '#171717', '#005bdb'),
+                ('#242424', '#f1f1f1', '#d65a21'),
+            ):
+                palette = QPalette(original)
+                palette.setColor(QPalette.Window, QColor(background))
+                palette.setColor(QPalette.WindowText, QColor(foreground))
+                palette.setColor(QPalette.Accent, QColor(accent))
+                app.setPalette(palette)
+                app.processEvents()
+                self.assertEqual(theme.property('background').name(), background)
+                self.assertEqual(theme.property('text').name(), foreground)
+                self.assertEqual(theme.property('accent').name(), accent)
+                self.assertEqual(theme.property('dark'), background == '#242424')
+        finally:
+            app.setPalette(original)
+            app.processEvents()
 
     def test_cycle_buttons_update_dial_and_saved_times_in_every_mode(self):
         popup = self.root_object.property('popup')

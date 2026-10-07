@@ -3,10 +3,11 @@ import QtQuick.Controls.Basic
 
 Pane {
     id: card
+    AuroraTheme { id: theme }
     padding: 12
     background: Rectangle {
         radius: 12
-        color: "#1b2433"
-        border.color: "#35425a"
+        color: theme.surface
+        border.color: theme.border
     }
 }

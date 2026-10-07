@@ -23,7 +23,7 @@ Item {
         when: windowShown
         function init() {
             var settings = findChild(view, "alarmSettings");
-            settings.close();
+            view.settingsOpen = false;
             tryCompare(settings, "visible", false);
             view.mode = 0; view.wakeMinutes = 360; view.cycles = 5; view.latency = 14;
             view.selectedId = ""; view.alarmName = "Sleep schedule";
@@ -62,24 +62,27 @@ Item {
             compare(request.schedule.bedMinutes, 1336);
             compare(request.schedule.wakeMinutes, 360);
             verify(request.schedule.bedEnabled && request.schedule.wakeEnabled);
-            verify(!findChild(view, "alarmSettings").opened);
+            verify(!view.settingsOpen);
             backend.completed("save", {ok: true, savedId: "saved-one"});
             compare(view.selectedId, "saved-one");
             verify(button.visible);
             verify(findChild(view, "sleepDial").visible);
             verify(findChild(view, "alarmStatus").text.indexOf("Alarm set") >= 0);
         }
-        function test_configure_panel_edits_reminders() {
+        function test_configure_page_edits_reminders() {
             var button = findChild(view, "configureAlarms");
             mouseClick(button, button.width / 2, button.height / 2);
             var popup = findChild(view, "alarmSettings");
-            tryCompare(popup, "opened", true);
-            verify(findChild(view, "sleepDial").visible);
+            tryCompare(popup, "visible", true);
+            verify(!findChild(view, "calculatorPage").visible);
             var enabled = findChild(view, "bedAlarmEnabled");
             wait(100);
             mouseClick(enabled, enabled.width / 2, enabled.height / 2);
             compare(view.bedEnabled, false);
-            popup.close();
+            var back = findChild(view, "settingsBack");
+            mouseClick(back, back.width / 2, back.height / 2);
+            verify(findChild(view, "calculatorPage").visible);
+            verify(!popup.visible);
             view.setAlarm();
             var request = backend.requests[backend.requests.length - 1];
             compare(request.schedule.bedEnabled, false);
@@ -116,6 +119,7 @@ Item {
             view.setAlarm();
             compare(backend.requests.length, 0);
             verify(view.statusError);
+            verify(view.settingsOpen);
         }
     }
 }

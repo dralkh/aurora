@@ -1,26 +1,17 @@
 import QtQuick
-import org.kde.plasma.components
 
-Popup {
-    id: popup
-    property var owner
+AuroraScheduleForm {
+    id: page
     readonly property var backend: owner ? owner.backend : null
-    padding: 0
-    implicitWidth: 400
-    implicitHeight: 640
-    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-    contentItem: AuroraScheduleForm {
-        owner: popup.owner
-        schedules: popup.backend ? popup.backend.schedules : []
-        pending: popup.backend ? popup.backend.pending : []
-        available: popup.backend && popup.backend.available
-        busy: popup.backend && popup.backend.busy
-        message: popup.owner ? popup.owner.status || (popup.backend ? popup.backend.error || popup.backend.warning : "") : ""
-        onCloseRequested: popup.close()
-        onRemoveRequested: popup.backend.request({action: "remove", id: popup.owner.selectedId})
-        onToggleRequested: function(enabled) { popup.backend.request({action: "toggle", id: popup.owner.selectedId, enabled: enabled}); }
-        onTestRequested: popup.backend.request({action: "test"})
-        onDismissRequested: function(key) { popup.backend.request({action: "dismiss", key: key}); }
-        onSnoozeRequested: function(key) { popup.backend.request({action: "snooze", key: key}); }
-    }
+    schedules: backend ? backend.schedules : []
+    pending: backend ? backend.pending : []
+    available: backend && backend.available
+    busy: backend && backend.busy
+    message: owner ? owner.status || (backend ? backend.error || backend.warning : "") : ""
+    onCloseRequested: if (owner) owner.settingsOpen = false
+    onRemoveRequested: if (backend) backend.request({action: "remove", id: owner.selectedId})
+    onToggleRequested: function(enabled) { if (backend) backend.request({action: "toggle", id: owner.selectedId, enabled: enabled}); }
+    onTestRequested: if (backend) backend.request({action: "test"})
+    onDismissRequested: function(key) { if (backend) backend.request({action: "dismiss", key: key}); }
+    onSnoozeRequested: function(key) { if (backend) backend.request({action: "snooze", key: key}); }
 }

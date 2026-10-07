@@ -10,7 +10,7 @@ from datetime import datetime
 from PySide6.QtCore import QCoreApplication, QObject, QPoint, QSize, Qt, QTimer, QUrl
 from PySide6.QtGui import QColor, QCursor, QGuiApplication, QIcon, QPainter, QPixmap
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
-from PySide6.QtQml import QQmlApplicationEngine
+from PySide6.QtQml import QQmlApplicationEngine, QQmlFileSelector
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 
@@ -68,6 +68,9 @@ class AuroraTray(QObject):
         self.engine = AlarmEngine(platform_support.data_path('alarms.json'))
         self.backend = Backend(self.engine)
         self.qml = QQmlApplicationEngine()
+        self.qml_selector = QQmlFileSelector(self.qml)
+        if sys.platform == 'darwin' and QGuiApplication.platformName() == 'cocoa':
+            self.qml_selector.setExtraSelectors(['cocoa'])
         self.qml.rootContext().setContextProperty('backend', self.backend)
         self.qml.load(QUrl.fromLocalFile(str(platform_support.resource('qml', 'App.qml'))))
         roots = self.qml.rootObjects()
@@ -76,6 +79,12 @@ class AuroraTray(QObject):
         root = roots[0]
         self.popup = root.property('popup')
         self.reminder = root.property('reminder')
+        self.native_material = None
+        if sys.platform == 'darwin' and QGuiApplication.platformName() == 'cocoa':
+            from .macos_appearance import install_material
+            theme = root.property('theme')
+            self.native_material = install_material(self.popup, int(theme.property('radius')))
+            theme.setProperty('nativeMaterial', self.native_material is not None)
         self.popup_content = self.popup.findChild(QObject, 'popupContent')
         if self.popup_content is not None:
             self.popup_content.closeRequested.connect(self.hide_popup)
@@ -105,7 +114,7 @@ class AuroraTray(QObject):
         connection = self.server.nextPendingConnection()
         if connection is not None:
             connection.disconnected.connect(connection.deleteLater)
-            self.toggle_popup()
+            self.show_popup()
 
     def start(self) -> None:
         self.tray = QSystemTrayIcon(tray_icon(), self)
@@ -113,7 +122,7 @@ class AuroraTray(QObject):
         self.tray.activated.connect(self.tray_activated)
         self.menu = QMenu()
         open_action = self.menu.addAction('Open Aurora')
-        open_action.triggered.connect(self.toggle_popup)
+        open_action.triggered.connect(self.show_popup)
         configure_action = self.menu.addAction('Configure alarms…')
         configure_action.triggered.connect(self.open_settings)
         test_action = self.menu.addAction('Test reminder')
@@ -170,27 +179,51 @@ class AuroraTray(QObject):
         self.tray.showMessage(summary, body, QSystemTrayIcon.MessageIcon.Information, 10000)
 
     def tray_activated(self, reason) -> None:
-        if reason in (QSystemTrayIcon.ActivationReason.Trigger, QSystemTrayIcon.ActivationReason.DoubleClick):
+        log.debug('Tray icon activated: %r', reason)
+        if reason in (
+            QSystemTrayIcon.ActivationReason.Trigger,
+            # Some native callbacks do not carry a usable activation reason.
+            QSystemTrayIcon.ActivationReason.Unknown,
+        ):
             self.toggle_popup()
+        elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            self.show_popup()
         elif reason == QSystemTrayIcon.ActivationReason.Context:
             self.menu.popup(QCursor.pos())
 
     def toggle_popup(self) -> None:
-        if bool(self.popup.property('visible')):
+        visible = bool(self.popup.property('visible'))
+        log.debug('Popup toggle requested; currently visible=%s', visible)
+        if visible:
             self.hide_popup()
             return
-        self.place_window(self.popup)
-        self.popup.setProperty('visible', True)
-        self.popup.requestActivate()
+        self.show_popup()
 
-    def hide_popup(self) -> None:
-        self.popup.setProperty('visible', False)
-
-    def open_settings(self) -> None:
+    def show_popup(self) -> None:
         if not bool(self.popup.property('visible')):
             self.place_window(self.popup)
             self.popup.setProperty('visible', True)
-            self.popup.requestActivate()
+        # On macOS, requestActivate only makes the window key. Raising the
+        # window also activates the agent application, even after a tray click.
+        self.popup.raise_()
+        self.popup.requestActivate()
+        if log.isEnabledFor(logging.DEBUG):
+            QTimer.singleShot(500, self.log_popup_state)
+
+    def log_popup_state(self) -> None:
+        log.debug(
+            'Popup state after activation: visible=%s active=%s exposed=%s',
+            bool(self.popup.property('visible')),
+            bool(self.popup.property('active')),
+            self.popup.isExposed(),
+        )
+
+    def hide_popup(self) -> None:
+        log.debug('Hiding popup')
+        self.popup.setProperty('visible', False)
+
+    def open_settings(self) -> None:
+        self.show_popup()
         if self.popup_content is not None:
             self.popup_content.setProperty('settingsOpen', True)
 
@@ -261,6 +294,9 @@ def main(argv=None) -> int:
     QCoreApplication.setApplicationName(platform_support.APP_NAME)
     QCoreApplication.setApplicationVersion(APP_VERSION)
     app = QApplication(argv)
+    if sys.platform == 'darwin' and QGuiApplication.platformName() == 'cocoa':
+        from PySide6.QtQuickControls2 import QQuickStyle
+        QQuickStyle.setStyle('macOS')
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(tray_icon())
     logger = logging_setup.configure('--debug' in argv)

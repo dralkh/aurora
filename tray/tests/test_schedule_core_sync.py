@@ -10,6 +10,12 @@ class VendoredCore(unittest.TestCase):
     def test_vendored_copy_matches_canonical(self):
         self.assertEqual(CANONICAL.read_bytes(), VENDORED.read_bytes())
 
+    def test_alarm_form_model_matches_canonical(self):
+        self.assertEqual(
+            (ROOT / 'package/contents/ui/AlarmModel.js').read_bytes(),
+            (ROOT / 'tray/aurora_tray/qml/AlarmModel.js').read_bytes(),
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

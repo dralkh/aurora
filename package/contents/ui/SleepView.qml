@@ -17,6 +17,7 @@ Item {
     property int mode: 0
     property bool clock24: false
     property date now: new Date()
+    property bool clockRunning: visible
     readonly property int anchor: mode === 0 ? wakeMinutes : mode === 1 ? bedMinutes : now.getHours() * 60 + now.getMinutes()
     readonly property int result: MathUtil.result(anchor, cycles, latency, mode)
     signal preferencesChanged()
@@ -26,6 +27,7 @@ Item {
     property bool alarmError: false
     signal setAlarmRequested()
     signal configureRequested(var button)
+    signal diaryRequested()
     function chooseCycle(count) {
         if (count < 1 || count > 6) return;
         view.cycles = count;
@@ -40,8 +42,9 @@ Item {
         var offset = MathUtil.dayOffset(value);
         return offset < 0 ? "Previous day" : offset > 0 ? "Next day" : "Same day";
     }
-    Timer { interval: 1000; running: view.visible && view.mode === 2; repeat: true; onTriggered: view.now = new Date() }
+    Timer { interval: 1000; running: view.clockRunning && view.mode === 2; repeat: true; onTriggered: view.now = new Date() }
     onModeChanged: now = new Date()
+    onVisibleChanged: if (visible) now = new Date()
     ColumnLayout {
         id: calculatorLayout
         objectName: "calculatorLayout"
@@ -233,6 +236,12 @@ Item {
                 Layout.fillWidth: true
                 text: "Set alarm"; enabled: view.alarmReady && !view.alarmBusy
                 onClicked: view.setAlarmRequested()
+            }
+            PC.Button {
+                objectName: "openDiary"
+                text: "Diary"
+                onClicked: view.diaryRequested()
+                Accessible.name: "Open diary"
             }
             PC.Button {
                 id: configureButton

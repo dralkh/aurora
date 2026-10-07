@@ -4,6 +4,7 @@ from __future__ import annotations
 from PySide6.QtCore import Property, QCoreApplication, QObject, QSettings, Signal, Slot
 
 from . import platform_support
+from .diary_core import DiaryStore
 
 DEFAULTS = dict(wakeMinutes=360, bedMinutes=1320, latency=14, cycles=5, mode=0, clock24=False)
 LIMITS = dict(wakeMinutes=(0, 1439), bedMinutes=(0, 1439), latency=(0, 120), cycles=(1, 6), mode=(0, 2))
@@ -47,6 +48,7 @@ class Backend(QObject):
     def __init__(self, engine, parent=None):
         super().__init__(parent)
         self.engine = engine
+        self.diary = DiaryStore(engine.store.path.with_name('diary.sqlite3'))
         self.settings = QSettings()
         self._prefs = {}
         for name, default in DEFAULTS.items():
@@ -183,3 +185,7 @@ class Backend(QObject):
     @Slot()
     def quit(self):
         QCoreApplication.quit()
+
+    @Slot('QVariantMap', result='QVariantMap')
+    def diaryRequest(self, payload):
+        return self.diary.request(dict(payload))

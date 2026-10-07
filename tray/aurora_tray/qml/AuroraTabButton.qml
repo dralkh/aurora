@@ -3,19 +3,21 @@ import QtQuick.Controls.Basic
 
 TabButton {
     id: control
-    implicitHeight: 38
+    AuroraTheme { id: theme }
+    implicitHeight: theme.nativeMac ? 30 : 38
     contentItem: Text {
         text: control.text; font: control.font
-        color: control.checked ? "#f3f4fb" : "#a3afc4"
+        color: control.checked ? theme.text : theme.muted
         horizontalAlignment: Text.AlignHCenter; verticalAlignment: Text.AlignVCenter
     }
     background: Rectangle {
-        color: control.hovered ? "#242e40" : "#1b2433"
+        color: theme.nativeMac ? (control.checked ? (theme.dark ? "#636363" : "#ffffff") : control.hovered ? theme.surface : "transparent")
+                               : control.hovered ? theme.raised : theme.surface
         radius: 6
         Rectangle {
             anchors.left: parent.left; anchors.right: parent.right; anchors.bottom: parent.bottom
-            height: 3; radius: 1.5; visible: control.checked; color: "#a77aff"
+            height: 3; radius: 1.5; visible: control.checked && !theme.nativeMac; color: theme.accent
         }
-        border.color: control.activeFocus ? "#63dbe5" : "transparent"
+        border.color: control.activeFocus ? theme.accent : "transparent"
     }
 }

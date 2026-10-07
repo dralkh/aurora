@@ -28,4 +28,4 @@ packages = ["aurora_tray"]
 version = { attr = "aurora_tray.__version__" }
 
 [tool.setuptools.package-data]
-aurora_tray = ["qml/*.qml", "qml/*.js", "icons/*"]
+aurora_tray = ["qml/*.qml", "qml/*.js", "qml/+cocoa/*.qml", "icons/*"]

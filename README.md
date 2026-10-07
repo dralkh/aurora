@@ -2,7 +2,7 @@
 
 # Aurora
 
-A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a tray widget using native Plasma controls, the active desktop theme, fonts, and accent color. The macOS/Windows tray app uses the Aurora midnight palette. Both versions provide the same sleep dial, cycle choices, and reminder settings. On macOS and Windows it runs as a standalone tray application described in [tray/README.md](tray/README.md).
+A sleep calculator with configurable bedtime and wake-up reminders. On KDE Plasma 6 it runs as a tray widget using native Plasma controls, the active desktop theme, fonts, and accent color. The macOS menu bar app follows the system appearance and accent color, with native controls and an AppKit material background. The Windows tray app uses the Aurora midnight palette. Both versions provide the same sleep dial, cycle choices, and reminder settings. On macOS and Windows it runs as a standalone tray application described in [tray/README.md](tray/README.md).
 
 ![Aurora Sleep product showcase](assets/aurora-sleep-showcase.png)
 
@@ -12,7 +12,11 @@ The banner and showcase use actual Plasma screenshots with the desktop's light t
 
 Choose **Wake at**, **Bed at** or **Sleep now**, adjust the clock handles or time fields, and choose one of the six sleep-duration options below **Time to fall asleep**. Each option updates the dial and calculated bedtime or wake-up time; the selected option stays highlighted. Press **Set alarm** to save bedtime and wake-up reminders using the current calculator choices, without leaving the calculator.
 
-The small **Configure** button opens a scrollable reminder panel containing the alarm name, separate bedtime and wake-up switches and sounds, advance bedtime notice, volume, snooze, and repeat days. Leave all days off for a one-time alarm at the next wake-up time. Choose **New alarm** or a saved alarm in the panel; saved alarms can be loaded, updated, enabled, paused or deleted there. Active reminders have **Snooze** and **Dismiss** controls in both their notification and the panel. **Test reminder** checks desktop notification and sound delivery.
+The small **Configure** button opens a scrollable reminder page with a **Back** button containing the alarm name, separate bedtime and wake-up switches and sounds, advance bedtime notice, volume, snooze, and repeat days. Leave all days off for a one-time alarm at the next wake-up time. Choose **New alarm** or a saved alarm on the page; saved alarms can be loaded, updated, enabled, paused or deleted there. Active reminders have **Snooze** and **Dismiss** controls in both their notification and the page. **Test reminder** checks desktop notification and sound delivery.
+
+Open **Diary** for a compact calendar history. Choose a day and write in **Dream**, **Waking**, or **Bedtime**. Entries save automatically after a short pause; **Save** writes immediately. Switching dates, sections, or using **Back** saves first. A dot marks days with entries. Clearing a section and saving removes only that section. Notes stay on this device in `diary.sqlite3`, beside the alarm file; updates preserve them. Each section supports up to 20,000 characters.
+
+The calculator math, alarm-form model, diary calendar and diary storage are shared across platforms. KDE uses Plasma controls and a D-Bus adapter; macOS and Windows use the standalone app and their desktop integrations. The package build rejects differing copies of shared files.
 
 A repeating Monday wake-up alarm can have its bedtime reminder on Sunday evening. Bedtimes already passed are skipped. If you confirm during the advance-notice window before bedtime, the bedtime reminder fires immediately. The wake sound repeats for up to five minutes; the notification remains until acknowledged.
 
@@ -41,7 +45,7 @@ Alarms are stored separately from widget preferences in `${XDG_STATE_HOME:-~/.lo
 
 ## macOS and Windows
 
-The port lives in `tray/` and keeps the whole app in the tray (menu bar on macOS). Builds install with a DMG on macOS (Apple Silicon) and an Inno Setup installer on Windows; the GitHub Actions workflow builds and attaches both, plus a fresh `aurora.plasmoid`, to a `v*` tag release. Builds are unsigned, so macOS requires right-click → Open and Windows shows a SmartScreen prompt. See [tray/README.md](tray/README.md) for running from source, packaging, storage locations, uninstall steps and tests. The Plasma widget and its D-Bus alarm service on Linux are unchanged.
+The port lives in `tray/` and keeps the whole app in the tray (menu bar on macOS). Builds install with a DMG on macOS (Apple Silicon) and an Inno Setup installer on Windows; the GitHub Actions workflow builds and attaches both, plus a fresh `aurora.plasmoid`, to a `v*` tag release. Builds are unsigned, so macOS requires right-click → Open and Windows shows a SmartScreen prompt. See [tray/README.md](tray/README.md) for running from source, packaging, storage locations, uninstall steps and tests. The Plasma widget uses the same alarm form model and diary, with its D-Bus service providing Linux storage and notifications.
 
 ## Validate
 

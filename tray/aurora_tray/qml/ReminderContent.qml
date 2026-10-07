@@ -10,15 +10,16 @@ Pane {
     padding: 16
     implicitHeight: layout.implicitHeight + 2 * padding
     background: Rectangle {
-        radius: theme.radius; color: theme.background; border.color: theme.accent
-        Rectangle { anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 1; height: 3; radius: 1.5; color: theme.accent }
+        radius: theme.radius; color: theme.background; border.color: theme.nativeMac ? theme.border : theme.accent
+        Rectangle { visible: !theme.nativeMac; anchors.top: parent.top; anchors.left: parent.left; anchors.right: parent.right; anchors.margins: 1; height: 3; radius: 1.5; color: theme.accent }
     }
     ColumnLayout {
         id: layout
         width: parent.width
         spacing: 12
         RowLayout {
-            Image { source: "../icons/aurora-mark.svg"; Layout.preferredWidth: 18; Layout.preferredHeight: 18 }
+            Image { visible: !theme.nativeMac; source: "../icons/aurora-mark.svg"; Layout.preferredWidth: 18; Layout.preferredHeight: 18 }
+            Label { visible: theme.nativeMac; text: "☾"; color: theme.muted; font.pixelSize: 18 }
             Label { text: "Aurora Sleep"; color: theme.muted; font.pixelSize: 11 }
         }
         Repeater {
@@ -36,7 +37,7 @@ Pane {
                     Layout.fillWidth: true; spacing: 12
                     Rectangle {
                         Layout.preferredWidth: 48; Layout.preferredHeight: 48
-                        radius: 24; color: "#302547"
+                        radius: 24; color: theme.nativeMac ? theme.surface : "#302547"
                         Label { anchors.centerIn: parent; text: entry.modelData.kind === "wake" ? "☀" : "☾"; font.pixelSize: 28; color: entry.modelData.kind === "wake" ? theme.cyan : theme.accent }
                     }
                     ColumnLayout {

@@ -39,7 +39,7 @@ Item {
             catch (exception) { response = {ok: false, error: data.stderr || "The alarm service did not respond."}; }
             client.available = response.available === true || response.ok === true;
             client.error = response.ok ? "" : response.error || "Could not update alarms.";
-            if (response.ok) {
+            if (response.ok && client.current.action.indexOf("diary_") !== 0) {
                 client.schedules = response.schedules || [];
                 client.pending = response.pending || [];
                 client.warning = response.warning || "";
